@@ -1,0 +1,41 @@
+name: Scheduled Tasks
+
+# 🔁 This workflow runs automatically every day at midnight (UTC)
+# and can also be triggered manually from the GitHub UI.
+on:
+  schedule:
+    - cron: "0 0 * * *"      # every day at 00:00 UTC
+  workflow_dispatch:          # allows manual trigger
+
+jobs:
+  maintenance:
+    name: Perform Scheduled Maintenance
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node.js (for compatibility with your project)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      # 3️⃣ Perform the scheduled maintenance
+      - name: Run scheduled maintenance script
+        run: |
+          echo "Starting scheduled maintenance..."
+          date
+          echo "Performing cleanup tasks..."
+          rm -rf tmp/ || true
+          mkdir -p logs
+          echo "Maintenance completed successfully at $(date)" >> logs/maintenance.log
+
+      # 4️⃣ Upload log artifact for record-keeping
+      - name: Upload maintenance log
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintenance-log
+          path: logs/maintenance.log
