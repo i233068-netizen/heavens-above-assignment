@@ -3,7 +3,7 @@ name: Dependency Updates (auto PR)
 # Run daily and allow manual runs
 on:
   schedule:
-    - cron: "0 3 * * *"    # daily at 03:00 UTC (change if you want)
+    - cron: "0 3 * * *"    # daily at 03:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -19,26 +19,41 @@ jobs:
       BRANCH_PREFIX: "dependency-updates"
       PR_LABELS: "dependencies"
       COMMIT_MSG: "chore(deps): update dependencies"
+
     steps:
+      # 🚀 Console message at workflow start
+      - name: Announce workflow start
+        run: |
+          echo "🚀 Dependency Updates workflow (dependency-updates.yml) is starting..."
+          echo "Triggered by: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "--------------------------------------------"
+
+      # 1️⃣ Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: true
 
+      # 2️⃣ Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
 
+      # 3️⃣ Install project dependencies
       - name: Install project deps (fresh)
         run: npm ci
 
+      # 4️⃣ Install npm-check-updates
       - name: Install npm-check-updates (ncu)
         run: npm install -g npm-check-updates
 
+      # 5️⃣ Show outdated dependencies (for logs)
       - name: Show outdated deps (for logs)
         run: npm outdated || true
 
+      # 6️⃣ Update dependencies according to policy
       - name: Update dependencies according to policy
         id: update
         run: |
@@ -52,11 +67,12 @@ jobs:
             echo "dependencies_changed=false" >> $GITHUB_OUTPUT
           fi
 
+      # 7️⃣ Install updated dependencies if changes exist
       - name: Install updated deps (if changes)
         if: steps.update.outputs.dependencies_changed == 'true'
-        run: |
-          npm install
+        run: npm install
 
+      # 8️⃣ Run tests (do not fail the job)
       - name: Run tests (do not fail the job here)
         if: steps.update.outputs.dependencies_changed == 'true'
         id: run-tests
@@ -65,6 +81,7 @@ jobs:
           npm test || echo "::set-output name=test_status::failed"
         continue-on-error: true
 
+      # 9️⃣ Commit dependency updates
       - name: Commit dependency updates
         if: steps.update.outputs.dependencies_changed == 'true'
         run: |
@@ -74,13 +91,15 @@ jobs:
           git checkout -b "$BRANCH"
           git add package.json package-lock.json || true
           git commit -m "${COMMIT_MSG}" || echo "No commit (maybe no changes)"
-          # we don't push here - create-pull-request will use the repo state
+
+      # 🔁 Push the new branch
       - name: Push updated branch before creating PR
         if: steps.update.outputs.dependencies_changed == 'true'
         run: |
           BRANCH="${BRANCH_PREFIX}-${{ github.run_id }}"
           git push origin "$BRANCH"
 
+      # 🔖 Create Pull Request
       - name: Create Pull Request with updated deps
         if: steps.update.outputs.dependencies_changed == 'true'
         uses: peter-evans/create-pull-request@v5
@@ -96,17 +115,10 @@ jobs:
           labels: ${{ env.PR_LABELS }}
           draft: false
 
-      - name: Add test-result label to PR (passed)
-        if: steps.update.outputs.dependencies_changed == 'true' && (steps.run-tests.outputs.test_status != 'failed')
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "test-result: passed"
-          file_pattern: README.md
-        # We will set a PR label below using the REST API
+      # 🔹 Add test-result label to PR if tests passed
       - name: Add PR label 'tests-passed'
         if: steps.update.outputs.dependencies_changed == 'true' && (steps.run-tests.outputs.test_status != 'failed')
         run: |
-          # find PR created by this run
           PR_NUMBER=$(gh pr list --state open --label dependencies --author "@me" --json number --jq '.[0].number' 2>/dev/null || true)
           if [ -n "$PR_NUMBER" ]; then
             gh api -X POST repos/${{ github.repository }}/issues/$PR_NUMBER/labels -f labels='["tests-passed"]'
@@ -114,6 +126,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 🔹 Add PR label 'tests-failed' if tests failed
       - name: Add PR label 'tests-failed'
         if: steps.update.outputs.dependencies_changed == 'true' && (steps.run-tests.outputs.test_status == 'failed')
         run: |
@@ -124,6 +137,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 🔹 No dependency changes
       - name: No dependency changes
         if: steps.update.outputs.dependencies_changed == 'false'
         run: echo "No dependency updates were found. Nothing to do."
+
+      # ✅ Console message at workflow end
+      - name: Workflow completed
+        run: echo "✅ dependency-updates.yml executed successfully!"
