@@ -32,7 +32,7 @@ jobs:
         run: npm install --save-dev eslint @eslint/js globals
 
       - name: Run ESLint
-        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx || true
+        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx
 
       - name: Generate ESLint HTML report
         run: npx eslint src/ --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
