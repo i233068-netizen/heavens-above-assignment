@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -28,25 +28,19 @@ jobs:
             npm install
           fi
 
-      - name: Install ESLint for code standard checks
-        run: |
-          npm install --save-dev eslint
+      - name: Install ESLint
+        run: npm install --save-dev eslint @eslint/js globals
 
       - name: Run ESLint
-        run: |
-          npx eslint . --ext .js,.jsx,.ts,.tsx || true
+        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx || true
+
+      - name: Generate ESLint HTML report
+        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
 
       - name: Run npm audit for vulnerabilities
-        run: |
-          npm audit --audit-level=moderate || true
+        run: npm audit --audit-level=moderate || true
 
-      - name: Upload Lint Report
-        if: always()
-        run: |
-          npx eslint . --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
-        continue-on-error: true
-
-      - name: Upload report artifact
+      - name: Upload Lint Report artifact
         uses: actions/upload-artifact@v4
         with:
           name: eslint-report
