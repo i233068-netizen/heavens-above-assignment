@@ -1,0 +1,53 @@
+name: Code Review
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  review:
+    name: Lint & Security Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install ESLint for code standard checks
+        run: |
+          npm install --save-dev eslint
+
+      - name: Run ESLint
+        run: |
+          npx eslint . --ext .js,.jsx,.ts,.tsx || true
+
+      - name: Run npm audit for vulnerabilities
+        run: |
+          npm audit --audit-level=moderate || true
+
+      - name: Upload Lint Report
+        if: always()
+        run: |
+          npx eslint . --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
+        continue-on-error: true
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-report
+          path: eslint-report.html
