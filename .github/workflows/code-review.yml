@@ -32,10 +32,10 @@ jobs:
         run: npm install --save-dev eslint @eslint/js globals
 
       - name: Run ESLint
-        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
 
       - name: Generate ESLint HTML report
-        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html
 
       - name: Run npm audit for vulnerabilities
         run: npm audit --audit-level=moderate || true
@@ -43,5 +43,5 @@ jobs:
       - name: Upload Lint Report artifact
         uses: actions/upload-artifact@v4
         with:
-          name: eslint-report
-          path: eslint-report.html
+           name: eslint-report
+           path: eslint-report.html
