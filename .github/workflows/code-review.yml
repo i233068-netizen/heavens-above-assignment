@@ -16,24 +16,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
+      - name: Run Linter
+        run: npm run lint
 
-      - name: Upload ESLint Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-report
-          path: eslint-report.html
-
-      - name: Initialize CodeQL
+      - name: Run CodeQL Analysis
         uses: github/codeql-action/init@v2
         with:
           languages: javascript
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+      - run: github/codeql-action/analyze@v2
