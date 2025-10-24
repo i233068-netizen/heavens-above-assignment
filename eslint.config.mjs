@@ -1,15 +1,19 @@
-import globals from "globals";
 import { defineConfig } from "eslint/config";
+import globals from "globals";
 
 export default defineConfig([
   {
-    files: ["**/*.{js,mjs,cjs}"], // all JS files recursively
-    extends: ["js/recommended"],   // recommended JS rules
+    files: ["**/*.{js,mjs,cjs}"], // all JS files
+    extends: ["js/recommended"],   // correct way to use @eslint/js preset
     languageOptions: {
       globals: {
-        ...globals.browser,
         ...globals.node,
+        ...globals.browser,
       },
+    },
+    rules: {
+      "no-unused-vars": "error",
+      "no-undef": "error",
     },
   },
   {
@@ -22,10 +26,6 @@ export default defineConfig([
         beforeEach: "readonly",
         afterEach: "readonly",
       },
-    },
-    rules: {
-      "no-unused-vars": "error",
-      "no-undef": "error",
     },
   },
 ]);
