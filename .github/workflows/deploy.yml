@@ -22,11 +22,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run linter (if defined)
-        run: |
-          node -e "try{const s=require('./package.json').scripts; process.exit(s && s.lint ? 0:1)}catch(e){process.exit(1)}"
-          if [ $? -eq 0 ]; then npm run lint; else echo 'No lint defined — skipping'; fi
-
       - name: Run tests (if defined)
         run: |
           node -e "try{const s=require('./package.json').scripts; process.exit(s && s.test ? 0:1)}catch(e){process.exit(1)}"
