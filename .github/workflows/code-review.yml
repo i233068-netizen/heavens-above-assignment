@@ -24,8 +24,10 @@ jobs:
       - name: Run Linter
         run: npm run lint
 
-      - name: Run CodeQL Analysis
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
           languages: javascript
-      - run: github/codeql-action/analyze@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
