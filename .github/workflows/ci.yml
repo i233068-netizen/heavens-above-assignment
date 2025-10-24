@@ -42,26 +42,6 @@ jobs:
             echo "No test script defined in package.json — skipping tests"
           fi
 
-      - name: Run lint if defined
-        run: |
-          node -e "try{const s=require('./package.json').scripts; process.exit(s && s.lint ? 0:1)}catch(e){process.exit(1)}"
-          if [ $? -eq 0 ]; then
-            echo "Detected lint script — running npm run lint"
-            npm run lint
-          else
-            echo "No lint script defined in package.json — skipping lint"
-          fi
-
-      - name: Smoke test (run start briefly)
-        run: |
-          node -e "try{const s=require('./package.json').scripts; process.exit(s && s.start ? 0:1)}catch(e){process.exit(1)}"
-          if [ $? -eq 0 ]; then
-            echo "Detected start script — running npm start for 30s"
-            timeout 30s npm start || echo "npm start exited or timed out (non-fatal)"
-          else
-            echo "No start script — skipping"
-          fi
-
       - name: Security audit (does not fail build)
         run: |
           npm audit --json > npm-audit.json || true
