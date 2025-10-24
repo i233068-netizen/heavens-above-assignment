@@ -19,7 +19,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx -f html -o eslint-report.html || true
