@@ -22,7 +22,7 @@ jobs:
         run: npm install
 
       - name: Run Linter
-        run: npm run lint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
