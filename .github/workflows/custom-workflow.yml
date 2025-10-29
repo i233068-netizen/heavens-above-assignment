@@ -1,0 +1,44 @@
+name: Generate Release Notes
+
+# Trigger when code is pushed to main branch
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # allow manual trigger
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install GitHub CLI
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh -y
+
+      # Step 3: Generate release notes for last 5 merged PRs
+      - name: Generate release notes
+        run: |
+          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+          gh pr list --state merged --limit 5 --json number,title,mergedAt \
+          | jq -r '.[] | "- PR #\(.number): \(.title)"' > release-notes.txt
+
+      # Step 4: Commit and push release notes
+      - name: Commit release notes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git add release-notes.txt
+          git commit -m "Update release notes from GitHub Actions" || echo "No changes to commit"
+          git push origin main
