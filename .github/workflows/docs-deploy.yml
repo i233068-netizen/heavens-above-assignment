@@ -1,0 +1,43 @@
+name: Documentation Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'          # any Markdown file in docs/
+      - 'mkdocs.yml'       # or mkdocs config changes
+      - '.github/workflows/docs-deploy.yml'
+  workflow_dispatch:        # allow manual trigger too
+
+permissions:
+  contents: write           # needed to push to gh-pages
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install MkDocs and theme
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material
+
+      - name: Build site
+        run: mkdocs build --clean
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          commit_message: "Auto-deploy docs from ${{ github.sha }}"
